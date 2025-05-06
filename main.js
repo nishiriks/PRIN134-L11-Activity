@@ -1,13 +1,18 @@
 const gameArea = document.getElementById('gameArea');
-const target = document.getElementById('target');
 const scoreBoard = document.getElementById('scoreBoard');
+const setupForm = document.getElementById('setupForm');
 
 let score = 0;
+let targets = [];
 
-function moveTarget() {
-  const gameAreaRect = gameArea.getBoundingClientRect();
-  const maxX = gameAreaRect.width - target.offsetWidth;
-  const maxY = gameAreaRect.height - target.offsetHeight;
+function moveTarget(target) {
+  const areaWidth = gameArea.clientWidth;
+  const areaHeight = gameArea.clientHeight;
+  const targetWidth = target.offsetWidth;
+  const targetHeight = target.offsetHeight;
+
+  const maxX = areaWidth - targetWidth;
+  const maxY = areaHeight - targetHeight;
 
   const randomX = Math.floor(Math.random() * maxX);
   const randomY = Math.floor(Math.random() * maxY);
@@ -21,24 +26,46 @@ function updateScore() {
   scoreBoard.textContent = `Score: ${score}`;
 }
 
-target.addEventListener('contextmenu', (e) => {
+function createTargets(count) {
+  targets.forEach(t => t.remove());
+  targets = [];
+
+  for (let i = 0; i < count; i++) {
+    const target = document.createElement('div');
+    target.classList.add('target');
+    target.textContent = i + 1;
+
+    moveTarget(target);
+    gameArea.appendChild(target);
+    targets.push(target);
+
+    target.addEventListener('contextmenu', (e) => {
+      e.preventDefault();
+      moveTarget(target);
+      updateScore();
+    });
+  }
+}
+
+setupForm.addEventListener('submit', (e) => {
   e.preventDefault();
-  moveTarget();
-  updateScore();
+  const quantity = parseInt(document.getElementById('quantity').value);
+  if (quantity >= 1 && quantity <= 5) {
+    score = 0;
+    scoreBoard.textContent = `Score: ${score}`;
+    createTargets(quantity);
+  }
 });
 
 gameArea.addEventListener('contextmenu', (e) => {
-  if (e.target !== target) {
+  if (!e.target.classList.contains('target')) {
     e.preventDefault();
   }
 });
 
-// Initial target position
-moveTarget();
-
 document.addEventListener('keydown', (e) => {
   if (e.ctrlKey && e.key === 'r') {
-    e.preventDefault(); 
+    e.preventDefault();
     score = 0;
     scoreBoard.textContent = `Score: ${score}`;
   }

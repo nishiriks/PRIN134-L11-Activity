@@ -1,18 +1,19 @@
 const gameArea = document.getElementById('gameArea');
+const btn = document.getElementById('btn');
+const numberInput = document.getElementById('quantity');
 const scoreBoard = document.getElementById('scoreBoard');
-const setupForm = document.getElementById('setupForm');
 
 let score = 0;
-let targets = [];
+let currentIndex = 1; 
+let totalTargets = 0;
 
 function moveTarget(target) {
   const areaWidth = gameArea.clientWidth;
   const areaHeight = gameArea.clientHeight;
-  const targetWidth = target.offsetWidth;
-  const targetHeight = target.offsetHeight;
+  const targetSize = 50;
 
-  const maxX = areaWidth - targetWidth;
-  const maxY = areaHeight - targetHeight;
+  const maxX = areaWidth - targetSize;
+  const maxY = areaHeight - targetSize;
 
   const randomX = Math.floor(Math.random() * maxX);
   const randomY = Math.floor(Math.random() * maxY);
@@ -26,47 +27,68 @@ function updateScore() {
   scoreBoard.textContent = `Score: ${score}`;
 }
 
-function createTargets(count) {
-  targets.forEach(t => t.remove());
-  targets = [];
+function resetGameState() {
+  currentIndex = 1;
+  totalTargets = 0;
+}
 
-  for (let i = 0; i < count; i++) {
+function createTargets(count) {
+  gameArea.innerHTML = '';
+  resetGameState();
+  totalTargets = count;
+
+  for (let i = 1; i <= count; i++) {
     const target = document.createElement('div');
     target.classList.add('target');
-    target.textContent = i + 1;
+    target.textContent = i.toString();
+    target.dataset.number = i;
 
     moveTarget(target);
-    gameArea.appendChild(target);
-    targets.push(target);
 
     target.addEventListener('contextmenu', (e) => {
       e.preventDefault();
-      moveTarget(target);
-      updateScore();
+      const clickedNumber = parseInt(target.dataset.number);
+
+      if (clickedNumber === currentIndex) {
+        target.remove();
+        currentIndex++;
+
+        
+        if (currentIndex > totalTargets) {
+          updateScore(); 
+        }
+      } else {
+        
+      }
     });
+
+    gameArea.appendChild(target);
   }
 }
 
-setupForm.addEventListener('submit', (e) => {
+btn.addEventListener('click', (e) => {
   e.preventDefault();
-  const quantity = parseInt(document.getElementById('quantity').value);
-  if (quantity >= 1 && quantity <= 5) {
+  const count = parseInt(numberInput.value);
+
+  if (count >= 1 && count <= 5) {
+    createTargets(count);
+  } else {
+    alert("Please enter a number between 1 and 5.");
+  }
+});
+
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'r' && !e.ctrlKey && !e.metaKey) {
+    e.preventDefault();
     score = 0;
-    scoreBoard.textContent = `Score: ${score}`;
-    createTargets(quantity);
+    updateScore();
+    resetGameState();
+    gameArea.innerHTML = '';
   }
 });
 
 gameArea.addEventListener('contextmenu', (e) => {
   if (!e.target.classList.contains('target')) {
     e.preventDefault();
-  }
-});
-
-document.addEventListener('keydown', (e) => {
-  if (e.ctrlKey && e.key === 'r') {
-    e.preventDefault();
-    score = 0;
-    scoreBoard.textContent = `Score: ${score}`;
   }
 });
